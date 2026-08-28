@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Book Ambulance | APADHA SEVA</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+</head>
+
+<body>
+
+    <header>
+
+        <div class="logo">
+            🚑 APADHA SEVA
+        </div>
+
+        <div class="made-in-bharat">
+            🇮🇳 Made in Bharat
+        </div>
+
+        <nav>
+
+            <a href="dashboard.html">Dashboard</a>
+
+            <a href="booking.html">Book Ambulance</a>
+
+            <a href="history.html">History</a>
+
+            <a href="contact.html">Emergency</a>
+
+            <a href="login.html">Logout</a>
+
+        </nav>
+
+    </header>
+
+    <section class="booking-section">
+
+        <h1>🚑 Book an Ambulance</h1>
+
+        <p>
+            Enter the accident location below.
+            Our system will search nearby hospitals and available ambulances.
+        </p>
+
+        <div class="search-container">
+
+            <input type="text" id="location" placeholder="📍 Enter Accident Location (Example: Medchal)">
+
+            <button class="search-btn">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                Search
+
+            </button>
+
+        </div>
+
+        <br>
+
+        <center>
+
+            <button class="location-btn">
+
+                📍 Use Current Location
+
+            </button>
+
+        </center>
+
+        <br>
+
+        <div class="map-box">
+
+            <h2>🗺 Live Emergency Map</h2>
+
+            <iframe src="https://www.google.com/maps?q=India&output=embed" width="100%" height="400"
+                style="border:0;border-radius:15px;" loading="lazy" allowfullscreen>
+
+            </iframe>
+
+        </div>
+
+        <br>
+
+        <h2>🏥 Nearby Hospitals</h2>
+
+        <p>
+            Nearby hospitals will appear here after you search the accident location.
+        </p>
+
+        <div class="hospital-container" id="hospitalContainer">
+
+            <!-- Nearby hospitals will be loaded here automatically -->
+
+        </div>
+
+        <br>
+
+        <h2>🚑 Nearby Available Ambulances</h2>
+
+        <p>
+
+            Available ambulances near the accident location.
+
+        </p>
+
+        <div class="ambulance-container">
+            <div class="ambulance-card">
+
+                <h3>🚑 Basic Ambulance</h3>
+
+                <p><strong>Status:</strong> 🟢 Available</p>
+
+                <p><strong>Distance:</strong> -- km</p>
+
+                <p><strong>Estimated Arrival:</strong> -- Minutes</p>
+
+                <button class="select-btn">
+
+                    Select Ambulance
+
+                </button>
+
+            </div>
+
+            <div class="ambulance-card">
+
+                <h3>🚑 ICU Ambulance</h3>
+
+                <p><strong>Status:</strong> 🟢 Available</p>
+
+                <p><strong>Distance:</strong> -- km</p>
+
+                <p><strong>Estimated Arrival:</strong> -- Minutes</p>
+
+                <button class="select-btn">
+
+                    Select Ambulance
+
+                </button>
+
+            </div>
+
+            <div class="ambulance-card">
+
+                <h3>🚑 Oxygen Ambulance</h3>
+
+                <p><strong>Status:</strong> 🟢 Available</p>
+
+                <p><strong>Distance:</strong> -- km</p>
+
+                <p><strong>Estimated Arrival:</strong> -- Minutes</p>
+
+                <button class="select-btn">
+
+                    Select Ambulance
+
+                </button>
+
+            </div>
+
+            <div class="ambulance-card">
+
+                <h3>🚑 Neonatal Ambulance</h3>
+
+                <p><strong>Status:</strong> 🟢 Available</p>
+
+                <p><strong>Distance:</strong> -- km</p>
+
+                <p><strong>Estimated Arrival:</strong> -- Minutes</p>
+
+                <button class="select-btn">
+
+                    Select Ambulance
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <br>
+
+        <div class="eta-box">
+
+            <h2>⏱ Estimated Arrival Time</h2>
+
+            <div class="eta-card">
+
+                <h3>Selected Ambulance</h3>
+
+                <p><strong>ETA:</strong> Waiting for Selection...</p>
+
+                <p><strong>Status:</strong> Not Assigned</p>
+
+            </div>
+
+        </div>
+
+        <br>
+
+        <div class="booking-summary">
+
+            <h2>📋 Booking Summary</h2>
+
+            <p><strong>Accident Location:</strong> Will appear after search</p>
+
+            <p><strong>Selected Hospital:</strong> Waiting for Selection</p>
+
+            <p><strong>Selected Ambulance:</strong> Waiting for Selection</p>
+
+            <p><strong>Estimated Arrival:</strong> -- Minutes</p>
+
+        </div>
+
+        <br>
+        <div class="instruction-box">
+
+            <h2>🚨 Emergency Instructions</h2>
+
+            <ul>
+
+                <li>Stay calm and ensure your own safety first.</li>
+
+                <li>Do not move the injured person unless there is immediate danger.</li>
+
+                <li>Provide first aid only if you are trained.</li>
+
+                <li>Keep your registered mobile phone switched on.</li>
+
+                <li>Our emergency response team will contact you shortly.</li>
+
+                <li>Keep the road clear so the ambulance can reach quickly.</li>
+
+            </ul>
+
+        </div>
+
+        <br>
+
+        <div class="note-box">
+
+            <h2>📞 Communication</h2>
+
+            <p>
+
+                After booking, our emergency response team will contact you on your
+                <strong>registered mobile number</strong>.
+
+            </p>
+
+            <p>
+
+                The nearest available ambulance will be assigned automatically.
+
+            </p>
+
+            <p>
+
+                The nearest suitable hospital (Government or Private) will be suggested
+                based on the accident location.
+
+            </p>
+
+        </div>
+
+        <br>
+
+        <center>
+
+            <button class="location-btn">
+
+                📍 Use Current Location
+
+            </button>
+
+        </center>
+
+        <br>
+
+        <hr>
+
+        <h2>👤 Who is the Ambulance for?</h2>
+
+        <p>
+            Please select who needs the ambulance.
+        </p>
+
+        <div class="booking-for">
+
+            <label>
+                <input type="radio" name="bookingFor" value="myself" checked>
+                Myself
+            </label>
+
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+            <label>
+                <input type="radio" name="bookingFor" value="other">
+                Someone Else
+            </label>
+
+        </div>
+
+        <br>
+
+        <div class="map-box">
+
+            <h2>🗺 Live Emergency Map</h2>
+
+            <iframe src="https://www.google.com/maps?q=India&output=embed" width="100%" height="400"
+                style="border:0;border-radius:15px;" loading="lazy" allowfullscreen>
+
+            </iframe>
+
+        </div>
+
+    </section>
+
+    <footer>
+
+        <div class="footer-content">
+
+            <h2>🚑 APADHA SEVA</h2>
+
+            <p>
+
+                Saving Lives Through Technology
+
+            </p>
+
+            <p>
+
+                24×7 Emergency Ambulance Booking Service
+
+            </p>
+
+            <p>
+
+                📞 Emergency Helpline : 108
+
+            </p>
+
+            <p>
+
+                📧 support@apadhaseva.in
+
+            </p>
+
+            <br>
+
+            <p>
+
+                🇮🇳 Made in Bharat
+
+            </p>
+
+        </div>
+
+    </footer>
+
+    <script>
+
+        function searchLocation() {
+
+            let location = document.getElementById("location").value;
+
+            if (location == "") {
+
+                alert("Please enter the accident location.");
+
+                return;
+
+            }
+
+            alert("Searching nearby hospitals and available ambulances near " + location);
+
+        }
+
+        function bookAmbulance() {
+
+            let bookingFor = document.querySelector('input[name="bookingFor"]:checked').value;
+
+            if (bookingFor === "myself") {
+
+                window.location.href = "confirmation.html";
+
+            }
+
+            else {
+
+                window.location.href = "contact.html";
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

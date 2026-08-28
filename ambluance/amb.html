@@ -1,0 +1,226 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APADHA SEVA - Ambulance Booking</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(rgba(255, 255, 255, 0.85),
+                    rgba(255, 255, 255, 0.85)),
+                url('https://images.unsplash.com/photo-1584515933487-779824d29309');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .madeinindia {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f97603;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .flag {
+            width: 220px;
+            margin: 20px auto;
+            border: 1px solid #000;
+        }
+
+        .saffron {
+            height: 45px;
+            background: #FF9933;
+        }
+
+        .white {
+            height: 45px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .green {
+            height: 45px;
+            background: #138808;
+        }
+
+
+        .container {
+            width: 500px;
+            margin: 20px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 0px 15px gray;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d62828;
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 60px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid gray;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        .emergency {
+            text-align: center;
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        .map {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        iframe {
+            width: 100%;
+            height: 250px;
+            border: none;
+            border-radius: 10px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="madeinindia">
+        🇮🇳 MADE IN INDIA
+    </div>
+
+    <div class="flag">
+        <div class="saffron"></div>
+        <div class="white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="38" height="38">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#000080" stroke-width="4.5" />
+                <circle cx="60" cy="60" r="8" fill="#000080" />
+                <g stroke="#000080" stroke-width="2.5">
+                    <line x1="60" y1="8" x2="60" y2="112" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(15 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(30 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(45 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(60 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(75 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(90 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(105 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(120 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(135 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(150 60 60)" />
+                    <line x1="60" y1="8" x2="60" y2="112" transform="rotate(165 60 60)" />
+                </g>
+            </svg>
+        </div>
+        <div class="green"></div>
+    </div>
+
+    <div class="container">
+
+        <div class="logo">🚑</div>
+
+        <h1>APADHA SEVA</h1>
+
+        <p style="text-align:center;">
+            Fast Ambulance Booking Service
+        </p>
+
+        <form>
+
+            <label>Patient Name</label>
+            <input type="text" placeholder="Enter Patient Name">
+
+            <label>Phone Number</label>
+            <input type="tel" placeholder="Enter Mobile Number">
+
+            <label>Emergency Type</label>
+            <select>
+                <option>Emergency</option>
+                <option>Accident</option>
+                <option>Heart Attack</option>
+                <option>Check Up</option>
+                <option>Dead Body Transport</option>
+            </select>
+
+            <label>Current Location</label>
+            <input type="text" placeholder="Enter Current Location">
+
+            <label>Hospital Name</label>
+            <input type="text" placeholder="Enter Hospital Name">
+
+            <button type="submit">
+                BOOK AMBULANCE
+            </button>
+
+        </form>
+
+        <div class="emergency">
+            🚨 Emergency Helpline : 108
+        </div>
+
+        <div class="map">
+            <h3>Nearby Location Map</h3>
+
+            <iframe src="https://maps.google.com/maps?q=hyderabad&t=&z=13&ie=UTF8&iwloc=&output=embed">
+            </iframe>
+
+        </div>
+
+    </div>
+
+    <footer>
+        © 2026 APADHA SEVA | Smart Ambulance Booking Platform
+    </footer>
+
+</body>
+
+</html>
+```

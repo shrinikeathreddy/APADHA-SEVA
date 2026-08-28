@@ -1,0 +1,139 @@
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+/* --- The Waving Flag Animation --- */
+.flag-background {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  display: flex;
+  flex-direction: column;
+  /* The core waving animation */
+  animation: wave 4s ease-in-out infinite alternate;
+  transform-origin: center left;
+  z-index: 1;
+}
+
+.stripe {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.saffron { background-color: #FF9933; }
+.white { background-color: #FFFFFF; position: relative; }
+.green { background-color: #138808; }
+
+/* Ashoka Chakra styling */
+.chakra {
+  width: 80px;
+  height: 80px;
+  border: 4px solid #000080;
+  border-radius: 50%;
+  position: relative;
+  animation: spin 10s linear infinite;
+}
+
+/* Adding a few spokes to the chakra using pseudo-elements */
+.chakra::before, .chakra::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 36px;
+  width: 2px; height: 72px;
+  background-color: #000080;
+}
+.chakra::after { transform: rotate(90deg); }
+
+/* Keyframes for the Wave Effect */
+@keyframes wave {
+  0% { transform: skewY(-3deg) scale(1.05); }
+  100% { transform: skewY(3deg) scale(1.05); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* --- The App Interface (Glassmorphism) --- */
+.ui-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  /* Darkens the flag slightly so the app text is readable */
+  background: rgba(0, 0, 0, 0.3); 
+}
+
+.booking-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px); /* Glass effect */
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.booking-card h1 {
+  color: #d32f2f;
+  margin-bottom: 10px;
+}
+
+.booking-card p { margin-bottom: 25px; color: #333; }
+
+.input-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.emergency-btn {
+  width: 100%;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.emergency-btn:hover { background-color: #b71c1c; }
