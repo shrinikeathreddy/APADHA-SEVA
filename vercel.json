@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm --prefix apadhaseva-react run build",
+  "outputDirectory": "apadhaseva-react/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
