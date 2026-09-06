@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Activity, PlusCircle, FileText, User, Phone, LogOut } from 'lucide-react';
+import { Activity, PlusCircle, FileText, User, Phone, LogOut, Truck, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
@@ -47,7 +47,7 @@ const Header = () => {
           🇮🇳 Made in Bharat
         </div>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isLoggedIn ? (
             <>
               <NavLink to="/dashboard" style={({ isActive }) => ({
@@ -57,7 +57,7 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '15px',
+                fontSize: '14px',
                 transition: 'color 0.2s'
               })}>
                 <Activity size={16} /> Dashboard
@@ -70,10 +70,42 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '15px',
+                fontSize: '14px',
                 transition: 'color 0.2s'
               })}>
-                <PlusCircle size={16} /> Book Ambulance
+                <PlusCircle size={16} /> Book
+              </NavLink>
+
+              <NavLink to="/driver" style={({ isActive }) => ({
+                textDecoration: 'none',
+                color: isActive ? 'var(--primary-color)' : '#0f172a',
+                fontWeight: isActive ? '700' : '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '14px',
+                background: '#fef2f2',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid #fee2e2'
+              })}>
+                <Truck size={16} color="var(--primary-color)" /> Driver
+              </NavLink>
+
+              <NavLink to="/admin" style={({ isActive }) => ({
+                textDecoration: 'none',
+                color: isActive ? 'var(--accent-teal)' : '#0f172a',
+                fontWeight: isActive ? '700' : '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '14px',
+                background: '#f0fdf4',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1px solid #dcfce7'
+              })}>
+                <Shield size={16} color="var(--accent-teal)" /> Admin
               </NavLink>
 
               <NavLink to="/history" style={({ isActive }) => ({
@@ -83,7 +115,7 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '15px',
+                fontSize: '14px',
                 transition: 'color 0.2s'
               })}>
                 <FileText size={16} /> History
@@ -96,10 +128,10 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '15px',
+                fontSize: '14px',
                 transition: 'color 0.2s'
               })}>
-                <User size={16} /> {userProfile?.fullName ? userProfile.fullName.split(' ')[0] : 'Profile'}
+                <User size={16} /> Profile
               </NavLink>
 
               <NavLink to="/contact" style={({ isActive }) => ({

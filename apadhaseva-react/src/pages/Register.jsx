@@ -14,7 +14,8 @@ const Register = () => {
     phone: '',
     password: '',
     age: '',
-    gender: 'Male'
+    gender: 'Male',
+    role: 'PATIENT' // PATIENT, DRIVER, ADMIN
   });
 
   const handleInputChange = (e) => {
@@ -37,6 +38,7 @@ const Register = () => {
       const profileData = {
         fullName: formData.fullName,
         phone: formData.phone,
+        role: formData.role,
         age: formData.age || '25',
         gender: formData.gender,
         houseNo: '10-2-45',
@@ -62,7 +64,13 @@ const Register = () => {
         origin: { y: 0.7 }
       });
 
-      navigate('/dashboard');
+      if (formData.role === 'DRIVER') {
+        navigate('/driver');
+      } else if (formData.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error("Registration error:", error);
       alert(error.message || "Failed to create account. Please try again.");
@@ -94,6 +102,41 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '13px' }}>
+              Register As:
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+              {[
+                { id: 'PATIENT', label: 'Patient / User', emoji: '🚑' },
+                { id: 'DRIVER', label: 'Driver', emoji: '🧑‍✈️' },
+                { id: 'ADMIN', label: 'Admin Ops', emoji: '🛡️' }
+              ].map(roleItem => (
+                <button
+                  key={roleItem.id}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, role: roleItem.id }))}
+                  style={{
+                    padding: '8px 4px',
+                    borderRadius: '8px',
+                    border: formData.role === roleItem.id ? '2px solid var(--primary-color)' : '1px solid #cbd5e1',
+                    background: formData.role === roleItem.id ? '#fef2f2' : '#f8fafc',
+                    color: formData.role === roleItem.id ? 'var(--primary-color)' : 'var(--text-main)',
+                    fontWeight: '700',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px'
+                  }}
+                >
+                  <span style={{ fontSize: '18px' }}>{roleItem.emoji}</span>
+                  {roleItem.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', fontSize: '13px' }}>
               Full Name *

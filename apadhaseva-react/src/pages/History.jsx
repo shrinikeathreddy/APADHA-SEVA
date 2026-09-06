@@ -29,7 +29,7 @@ const History = () => {
       {
         id: 'APS-2025987',
         date: '05 Jul 2026',
-        patient: 'Srinivas Rao (Father)',
+        patient: 'Nookala Shrinikeath Reddy (Father)',
         pickup: 'Gachibowli Stadium Road',
         hospital: 'Apollo Medical Hospital',
         status: 'Cancelled',

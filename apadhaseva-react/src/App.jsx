@@ -17,6 +17,8 @@ import History from './pages/History';
 import Profile from './pages/Profile';
 import Contact from './pages/Contact';
 import FirstAid from './pages/FirstAid';
+import DriverPortal from './pages/DriverPortal';
+import AdminPortal from './pages/AdminPortal';
 
 import { AuthProvider } from './context/AuthContext';
 
@@ -43,6 +45,8 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/first-aid" element={<FirstAid />} />
+                <Route path="/driver" element={<DriverPortal />} />
+                <Route path="/admin" element={<AdminPortal />} />
               </Routes>
             </SmoothScroll>
           </main>

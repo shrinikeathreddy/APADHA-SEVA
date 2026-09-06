@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       try { return JSON.parse(cached); } catch (e) {}
     }
     return {
-      fullName: 'Srinivas Rao',
+      fullName: 'Nookala Shrinikeath Reddy',
       email: 'user@apadhaseva.com',
       phone: '+91 9876543210',
       age: '26',

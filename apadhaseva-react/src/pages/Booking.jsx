@@ -59,16 +59,39 @@ const Booking = () => {
   const [selectedAmbulance, setSelectedAmbulance] = useState(null);
   const [bookingFor, setBookingFor] = useState('myself'); // myself, other
 
-  // Base hospital data with relative offset targets
+  // Base hospital dataset mapped by key locations across Medchal-Malkajgiri & Hyderabad
   const baseHospitals = [
-    { id: 'h1', name: 'NIMS Trauma Emergency Center', offset: [0.005, -0.003], beds: 8, phone: '040-23489000', icuStatus: 'Green 🟢' },
-    { id: 'h2', name: 'Gandhi General Hospital & ICU', offset: [0.012, 0.008], beds: 14, phone: '040-27505566', icuStatus: 'Green 🟢' },
-    { id: 'h3', name: 'Apollo Critical Trauma Care', offset: [-0.009, 0.011], beds: 3, phone: '040-23607777', icuStatus: 'Warning 🟡' },
-    { id: 'h4', name: 'Care Emergency Multispecialty', offset: [0.018, -0.015], beds: 5, phone: '040-30418888', icuStatus: 'Green 🟢' },
-    { id: 'h5', name: 'Osmania General Emergency Unit', offset: [-0.015, -0.012], beds: 12, phone: '040-24600121', icuStatus: 'Green 🟢' }
+    // Medchal Zone Hospitals
+    { id: 'h_med1', name: 'Medchal Area Government Hospital & ICU', area: 'Medchal', offset: [0.085, 0.045], beds: 12, phone: '040-27601122', icuStatus: 'Green 🟢' },
+    { id: 'h_med2', name: 'Malla Reddy Narayana Emergency Hospital', area: 'Medchal', offset: [0.065, 0.038], beds: 18, phone: '040-23782222', icuStatus: 'Green 🟢' },
+    { id: 'h_med3', name: 'Kompally Lifecare Emergency Hospital', area: 'Kompally', offset: [0.048, 0.030], beds: 9, phone: '040-27903344', icuStatus: 'Green 🟢' },
+    { id: 'h_med4', name: 'CMR Emergency Hospital (Medchal)', area: 'Medchal', offset: [0.092, 0.052], beds: 7, phone: '040-27609988', icuStatus: 'Green 🟢' },
+
+    // Secunderabad / Alwal Area Hospitals
+    { id: 'h_sec1', name: 'Gandhi General Hospital & ICU', area: 'Secunderabad', offset: [0.012, 0.008], beds: 14, phone: '040-27505566', icuStatus: 'Green 🟢' },
+    { id: 'h_sec2', name: 'Yashoda Hospital Emergency Unit', area: 'Secunderabad', offset: [0.020, 0.015], beds: 12, phone: '040-27703999', icuStatus: 'Green 🟢' },
+    { id: 'h_sec3', name: 'KIMS Hospital Trauma Center', area: 'Secunderabad', offset: [0.018, 0.010], beds: 15, phone: '040-44885000', icuStatus: 'Green 🟢' },
+
+    // Kukatpally / Miyapur / Bachupally Hospitals
+    { id: 'h_kuk1', name: 'Omni Hospital Trauma Center', area: 'Kukatpally', offset: [0.035, -0.020], beds: 9, phone: '040-30999999', icuStatus: 'Green 🟢' },
+    { id: 'h_kuk2', name: 'Prime Emergency Hospital', area: 'Kukatpally', offset: [0.030, -0.015], beds: 7, phone: '040-23057777', icuStatus: 'Green 🟢' },
+    { id: 'h_kuk3', name: 'SLG Hospitals & Critical Care', area: 'Bachupally', offset: [0.055, -0.010], beds: 11, phone: '040-23880000', icuStatus: 'Green 🟢' },
+
+    // Gachibowli / Madhapur / Hitec City Hospitals
+    { id: 'h_gach1', name: 'AIG Emergency & Trauma Institute', area: 'Gachibowli', offset: [-0.010, -0.005], beds: 18, phone: '040-42444444', icuStatus: 'Green 🟢' },
+    { id: 'h_gach2', name: 'Apollo Critical Trauma Care', area: 'Madhapur', offset: [-0.009, 0.011], beds: 5, phone: '040-23607777', icuStatus: 'Warning 🟡' },
+    { id: 'h_gach3', name: 'Care Emergency Multispecialty', area: 'Hitec City', offset: [0.008, -0.005], beds: 8, phone: '040-30418888', icuStatus: 'Green 🟢' },
+
+    // Central Hyderabad Hospitals
+    { id: 'h_hyd1', name: 'NIMS Trauma Emergency Center', area: 'Punjagutta', offset: [0.005, -0.003], beds: 8, phone: '040-23489000', icuStatus: 'Green 🟢' },
+    { id: 'h_hyd2', name: 'Osmania General Emergency Unit', area: 'Afzal Gunj', offset: [-0.015, -0.012], beds: 12, phone: '040-24600121', icuStatus: 'Green 🟢' },
+
+    // LB Nagar Zone Hospitals
+    { id: 'h_lbn1', name: 'Kamineni Emergency Hospital', area: 'LB Nagar', offset: [-0.040, 0.060], beds: 10, phone: '040-39879999', icuStatus: 'Green 🟢' },
+    { id: 'h_lbn2', name: 'Aware Gleneagles Global Hospital', area: 'LB Nagar', offset: [-0.045, 0.065], beds: 9, phone: '040-24111111', icuStatus: 'Green 🟢' }
   ];
 
-  // Dynamically calculate nearby hospitals ordered by distance from user location
+  // Dynamically calculate nearby hospitals ordered by area match first, then proximity distance
   const [hospitalsList, setHospitalsList] = useState([]);
 
   // 100% Free Emergency Ambulance Deck (Govt 108 / APADHA SEVA)
@@ -91,21 +114,33 @@ const Booking = () => {
     return parseFloat((R * c).toFixed(1));
   };
 
-  // Recalculate hospital list sorted by closest proximity whenever mapCenter changes
+  // Recalculate hospital list prioritizing user area match FIRST, then closest driving distance
   useEffect(() => {
     const [uLat, uLng] = mapCenter;
+    const locLower = (locationName + ' ' + addressInput).toLowerCase();
+
     const updated = baseHospitals.map(h => {
       const hLat = uLat + h.offset[0];
       const hLng = uLng + h.offset[1];
       const dist = calcDistance(uLat, uLng, hLat, hLng);
-      return { ...h, distance: dist, lat: hLat, lng: hLng };
-    }).sort((a, b) => a.distance - b.distance);
+
+      const areaLower = h.area.toLowerCase();
+      const nameLower = h.name.toLowerCase();
+      const isAreaMatch = locLower.includes(areaLower) || 
+        (locLower.includes('medchal') && (areaLower.includes('medchal') || areaLower.includes('kompally') || nameLower.includes('medchal')));
+
+      return { ...h, distance: dist, lat: hLat, lng: hLng, isAreaMatch };
+    }).sort((a, b) => {
+      if (a.isAreaMatch && !b.isAreaMatch) return -1;
+      if (!a.isAreaMatch && b.isAreaMatch) return 1;
+      return a.distance - b.distance;
+    });
 
     setHospitalsList(updated);
-    if (updated.length > 0 && !selectedHospital) {
-      setSelectedHospital(updated[0]); // Auto-select #1 closest hospital
+    if (updated.length > 0) {
+      setSelectedHospital(updated[0]); // Auto-select top area hospital
     }
-  }, [mapCenter]);
+  }, [mapCenter, locationName, addressInput]);
 
   // Set default selected ambulance
   useEffect(() => {
@@ -327,6 +362,42 @@ const Booking = () => {
             <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
               <strong>Current Coordinate Hub:</strong> {locationName}
             </p>
+
+            {/* Quick Area Presets */}
+            <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Quick Areas:</span>
+              {[
+                { name: 'Medchal', coords: [17.6294, 78.4813] },
+                { name: 'Kompally', coords: [17.5372, 78.4844] },
+                { name: 'Secunderabad', coords: [17.4399, 78.4983] },
+                { name: 'Kukatpally', coords: [17.4849, 78.4138] },
+                { name: 'Gachibowli', coords: [17.4401, 78.3489] },
+                { name: 'Madhapur', coords: [17.4483, 78.3741] },
+                { name: 'LB Nagar', coords: [17.3457, 78.5522] }
+              ].map((preset) => (
+                <button
+                  key={preset.name}
+                  onClick={() => {
+                    setMapCenter(preset.coords);
+                    setLocationName(`${preset.name}, Telangana, India`);
+                    setAddressInput(preset.name);
+                  }}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '16px',
+                    border: '1px solid #cbd5e1',
+                    background: (locationName + ' ' + addressInput).toLowerCase().includes(preset.name.toLowerCase()) ? '#dc2626' : '#f8fafc',
+                    color: (locationName + ' ' + addressInput).toLowerCase().includes(preset.name.toLowerCase()) ? 'white' : '#334155',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  📍 {preset.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Booking recipient radio buttons */}
@@ -405,16 +476,20 @@ const Booking = () => {
                   }}
                 >
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <h4 style={{ fontSize: '14px', color: 'var(--secondary-color)' }}>{h.name}</h4>
-                      {idx === 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <h4 style={{ fontSize: '14px', color: 'var(--secondary-color)', fontWeight: '700' }}>{h.name}</h4>
+                      {h.isAreaMatch ? (
                         <span style={{ background: '#166534', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
-                          📍 NEAREST (Closest)
+                          📍 LOCAL AREA ({h.area.toUpperCase()})
                         </span>
-                      )}
+                      ) : idx === 0 ? (
+                        <span style={{ background: '#0284c7', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
+                          📍 NEAREST PROXIMITY
+                        </span>
+                      ) : null}
                     </div>
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      Distance: <strong>{h.distance} km</strong> | Emergency Contact: {h.phone}
+                      Zone: <strong>{h.area}</strong> | Proximity: <strong>{h.distance} km</strong> | Emergency: {h.phone}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
