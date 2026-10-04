@@ -39,34 +39,42 @@ const AdminPortal = () => {
     sector: 'Madhapur Zone 1'
   });
 
-  // New Admin Form State
+  // New Hospital Admin Form State
   const [newAdmin, setNewAdmin] = useState({
+    hospital: '',
     name: '',
     email: '',
     phone: '',
-    role: 'Dispatch Operations Officer',
-    region: 'Greater Hyderabad HQ'
+    totalBeds: 100,
+    emptyBeds: 20,
+    icuBeds: 5
   });
+
+  // Registered Hospital ER Administrators & Bed Capacities
+  const [hospitalAdmins, setHospitalAdmins] = useState(() => {
+    const saved = localStorage.getItem('apadhaseva_hospital_admins');
+    if (saved) {
+      try { return JSON.parse(saved); } catch(e) {}
+    }
+    return [
+      { id: 'HOSP-01', hospital: 'CARE Hospitals, Gachibowli', name: 'Dr. A. K. Sharma', email: 'er.gachibowli@carehospitals.com', phone: '+91 98490 11111', totalBeds: 250, emptyBeds: 42, icuBeds: 12 },
+      { id: 'HOSP-02', hospital: 'Apollo Hospitals, Jubilee Hills', name: 'Dr. Sunita Reddy', email: 'er.desk@apollojubilee.com', phone: '+91 98490 22222', totalBeds: 380, emptyBeds: 68, icuBeds: 18 },
+      { id: 'HOSP-03', hospital: 'KIMS Hospitals, Begumpet', name: 'Dr. Rajesh Varma', email: 'er@kimshospitals.com', phone: '+91 98490 33333', totalBeds: 300, emptyBeds: 54, icuBeds: 15 }
+    ];
+  });
+
+  // Calculate total ER beds across network
+  const totalBedsCount = hospitalAdmins.reduce((acc, h) => acc + Number(h.totalBeds || 0), 0);
+  const emptyBedsCount = hospitalAdmins.reduce((acc, h) => acc + Number(h.emptyBeds || 0), 0);
+  const icuBedsCount = hospitalAdmins.reduce((acc, h) => acc + Number(h.icuBeds || 0), 0);
 
   // Operational Metrics
   const metrics = [
     { label: 'Active Emergency Calls', value: '14', change: '+3 in last hour', color: '#dc2626', icon: ShieldAlert },
     { label: 'Ambulances Online', value: '42 / 48', change: '87.5% fleet active', color: '#16a34a', icon: Truck },
-    { label: 'Avg Dispatch Time', value: '3.4 min', change: '-12s vs weekly avg', color: '#0284c7', icon: Clock },
-    { label: 'Hospital ER Link', value: '28 Connected', change: '100% operational', color: '#0d9488', icon: Building2 }
+    { label: 'Total Hospital ER Beds', value: `${emptyBedsCount} / ${totalBedsCount}`, change: `${emptyBedsCount} Empty Beds Available`, color: '#0284c7', icon: Building2 },
+    { label: 'Critical ICU Beds', value: `${icuBedsCount}`, change: 'ICU Beds Ready', color: '#0d9488', icon: Activity }
   ];
-
-  // Registered Admin System Users
-  const [adminUsers, setAdminUsers] = useState(() => {
-    const saved = localStorage.getItem('apadhaseva_admin_users');
-    if (saved) {
-      try { return JSON.parse(saved); } catch(e) {}
-    }
-    return [
-      { id: 'ADM-01', name: 'N. Shrinikeath Reddy', email: 'admin@apadhaseva.com', role: 'Super Admin', region: 'Greater Hyderabad HQ' },
-      { id: 'ADM-02', name: 'Pooja Hegde', email: 'pooja.dispatch@apadhaseva.com', role: 'Chief Dispatcher', region: 'Cyberabad Sector' }
-    ];
-  });
 
   // Fleet Roster Data
   const [fleet, setFleet] = useState(() => {
@@ -89,8 +97,8 @@ const AdminPortal = () => {
   }, [fleet]);
 
   useEffect(() => {
-    localStorage.setItem('apadhaseva_admin_users', JSON.stringify(adminUsers));
-  }, [adminUsers]);
+    localStorage.setItem('apadhaseva_hospital_admins', JSON.stringify(hospitalAdmins));
+  }, [hospitalAdmins]);
 
   // Live Emergency Dispatch Logs
   const [activeDispatches, setActiveDispatches] = useState([
@@ -134,22 +142,25 @@ const AdminPortal = () => {
 
   const handleAddAdminSubmit = (e) => {
     e.preventDefault();
-    if (!newAdmin.name || !newAdmin.email) {
-      alert("Please fill in admin name and email.");
+    if (!newAdmin.hospital || !newAdmin.name || !newAdmin.email) {
+      alert("Please fill in Hospital Name, Administrator Name, and Official Email.");
       return;
     }
 
     const created = {
-      id: `ADM-0${adminUsers.length + 1}`,
+      id: `HOSP-0${hospitalAdmins.length + 1}`,
+      hospital: newAdmin.hospital,
       name: newAdmin.name,
       email: newAdmin.email,
-      role: newAdmin.role,
-      region: newAdmin.region
+      phone: newAdmin.phone || '+91 98490 00000',
+      totalBeds: Number(newAdmin.totalBeds) || 100,
+      emptyBeds: Number(newAdmin.emptyBeds) || 20,
+      icuBeds: Number(newAdmin.icuBeds) || 5
     };
 
-    setAdminUsers(prev => [...prev, created]);
+    setHospitalAdmins(prev => [...prev, created]);
     setShowAdminModal(false);
-    setNewAdmin({ name: '', email: '', phone: '', role: 'Dispatch Operations Officer', region: 'Greater Hyderabad HQ' });
+    setNewAdmin({ hospital: '', name: '', email: '', phone: '', totalBeds: 100, emptyBeds: 20, icuBeds: 5 });
   };
 
   const handleExportLogs = () => {
@@ -206,7 +217,7 @@ const AdminPortal = () => {
               className="btn-primary"
               style={{ background: '#2563eb' }}
             >
-              <UserPlus size={18} /> + Add System Admin
+              <Building2 size={18} /> + Add Hospital Admin
             </button>
 
             <button 
@@ -230,7 +241,7 @@ const AdminPortal = () => {
                 <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)' }}>{m.label}</span>
                 <IconComponent size={22} color={m.color} />
               </div>
-              <div style={{ fontSize: '32px', fontWeight: '800', marginTop: '10px', color: 'var(--text-main)' }}>
+              <div style={{ fontSize: '30px', fontWeight: '800', marginTop: '10px', color: 'var(--text-main)' }}>
                 {m.value}
               </div>
               <div style={{ fontSize: '12px', fontWeight: '600', color: m.color, marginTop: '4px' }}>
@@ -241,29 +252,53 @@ const AdminPortal = () => {
         })}
       </div>
 
-      {/* System Admin Roster Bar */}
-      <div className="glass-card" style={{ padding: '20px', marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShieldCheck size={20} color="#2563eb" /> Active System Administrators ({adminUsers.length})
-        </h3>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          {adminUsers.map(usr => (
-            <div key={usr.id} style={{
+      {/* Hospital ER Admin & Bed Inventory Bar */}
+      <div className="glass-card" style={{ padding: '24px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Building2 size={22} color="#2563eb" /> Connected Hospital ER Admins & Bed Inventory ({hospitalAdmins.length})
+          </h3>
+          <button 
+            onClick={() => setShowAdminModal(true)}
+            className="btn-secondary"
+            style={{ fontSize: '13px', padding: '6px 14px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
+          >
+            + Add Hospital Admin
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+          {hospitalAdmins.map(hosp => (
+            <div key={hosp.id} style={{
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
-              borderRadius: '10px',
-              padding: '10px 16px',
-              fontSize: '13px',
+              borderRadius: '12px',
+              padding: '16px',
               display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
+              flexDirection: 'column',
+              justify: 'space-between',
+              gap: '12px'
             }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#dbeafe', color: '#1e40af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>
-                {usr.name[0]}
-              </div>
               <div>
-                <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{usr.name}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{usr.role} • {usr.email}</div>
+                <div style={{ fontWeight: '800', fontSize: '15px', color: 'var(--secondary-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  🏥 {hosp.hospital}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Admin: <strong>{hosp.name}</strong> • {hosp.email}
+                </div>
+              </div>
+
+              {/* Bed Capacity Counters */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', fontWeight: '700' }}>
+                <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 10px', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+                  🛏️ Total: {hosp.totalBeds} Beds
+                </span>
+                <span style={{ background: '#dcfce7', color: '#15803d', padding: '6px 10px', borderRadius: '8px', border: '1px solid #86efac' }}>
+                  🟢 Empty: {hosp.emptyBeds} Beds
+                </span>
+                <span style={{ background: '#fef2f2', color: '#b91c1c', padding: '6px 10px', borderRadius: '8px', border: '1px solid #fca5a5' }}>
+                  🚨 ICU: {hosp.icuBeds} Beds
+                </span>
               </div>
             </div>
           ))}
@@ -513,68 +548,106 @@ const AdminPortal = () => {
         </div>
       )}
 
-      {/* MODAL 2: ADD SYSTEM ADMIN */}
+      {/* MODAL 2: ADD HOSPITAL ADMIN & BED CAPACITY */}
       {showAdminModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '20px'
         }}>
-          <div className="glass-card" style={{ maxWidth: '500px', width: '100%', padding: '28px', background: 'white' }}>
+          <div className="glass-card" style={{ maxWidth: '550px', width: '100%', padding: '28px', background: 'white' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <UserPlus size={22} color="#2563eb" /> Add System Administrator
+                <Building2 size={22} color="#2563eb" /> Add Hospital ER Admin & Bed Capacity
               </h3>
               <button onClick={() => setShowAdminModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                 <X size={20} color="#64748b" />
               </button>
             </div>
 
-            <form onSubmit={handleAddAdminSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleAddAdminSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Administrator Name *</label>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Hospital Name *</label>
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Anish Sharma"
-                  value={newAdmin.name}
-                  onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
+                  placeholder="e.g. CARE Hospitals, Gachibowli"
+                  value={newAdmin.hospital}
+                  onChange={(e) => setNewAdmin({...newAdmin, hospital: e.target.value})}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
                 />
               </div>
 
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Official Email Address *</label>
-                <input 
-                  type="email" 
-                  required
-                  placeholder="anish.admin@apadhaseva.com"
-                  value={newAdmin.email}
-                  onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Admin Full Name *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Dr. A. K. Sharma"
+                    value={newAdmin.name}
+                    onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Official ER Email *</label>
+                  <input 
+                    type="email" 
+                    required
+                    placeholder="er.admin@carehospitals.com"
+                    value={newAdmin.email}
+                    onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Administrative Designation</label>
-                <select 
-                  value={newAdmin.role}
-                  onChange={(e) => setNewAdmin({...newAdmin, role: e.target.value})}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white' }}
-                >
-                  <option value="Dispatch Operations Officer">Dispatch Operations Officer</option>
-                  <option value="Hospital ER Coordinator">Hospital ER Coordinator</option>
-                  <option value="Fleet Supervisor">Fleet Supervisor</option>
-                  <option value="Super Admin">Super Administrator</option>
-                </select>
+              {/* Bed Inventory Inputs */}
+              <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  🛏️ Hospital ER Bed Inventory Setup
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Total Beds</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      value={newAdmin.totalBeds}
+                      onChange={(e) => setNewAdmin({...newAdmin, totalBeds: e.target.value})}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Empty Beds</label>
+                    <input 
+                      type="number" 
+                      min="0"
+                      value={newAdmin.emptyBeds}
+                      onChange={(e) => setNewAdmin({...newAdmin, emptyBeds: e.target.value})}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>ICU Beds</label>
+                    <input 
+                      type="number" 
+                      min="0"
+                      value={newAdmin.icuBeds}
+                      onChange={(e) => setNewAdmin({...newAdmin, icuBeds: e.target.value})}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button type="button" onClick={() => setShowAdminModal(false)} className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }}>
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: '#2563eb' }}>
-                  Create Admin Profile
+                  Save Hospital Admin
                 </button>
               </div>
             </form>
