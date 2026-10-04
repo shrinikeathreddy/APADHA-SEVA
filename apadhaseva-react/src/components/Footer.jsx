@@ -30,9 +30,23 @@ const Footer = () => {
         </div>
 
         <div>
-          <h3 style={{ fontSize: '18px', marginBottom: '15px', color: 'white' }}>Quick Contacts</h3>
+          <h3 style={{ fontSize: '18px', marginBottom: '15px', color: 'white' }}>Quick Portals & Navigation</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
+            <li><a href="#/book" style={{ color: '#cbd5e1', textDecoration: 'none' }}>🚑 Book Emergency Ambulance</a></li>
+            <li><a href="#/driver" style={{ color: '#fca5a5', textDecoration: 'none', fontWeight: '600' }}>🚚 Driver Emergency Console</a></li>
+            <li><a href="#/admin" style={{ color: '#86efac', textDecoration: 'none', fontWeight: '600' }}>🛡️ Hospital ER Admin Desk</a></li>
+            <li><a href="#/first-aid" style={{ color: '#cbd5e1', textDecoration: 'none' }}>🩹 Step-by-Step First Aid Guides</a></li>
+            <li><a href="#/contact" style={{ color: '#cbd5e1', textDecoration: 'none' }}>☎️ Emergency Directories & Support</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 style={{ fontSize: '18px', marginBottom: '15px', color: 'white' }}>National Helplines</h3>
           <p style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', marginBottom: '8px', fontSize: '14px' }}>
-            <Phone size={16} className="text-red-500" style={{ color: 'var(--primary-color)' }} /> Emergency Helpline: <strong>108 / 112</strong>
+            <Phone size={16} style={{ color: 'var(--primary-color)' }} /> Medical Ambulance: <strong>108</strong>
+          </p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', marginBottom: '8px', fontSize: '14px' }}>
+            <Phone size={16} style={{ color: 'var(--accent-teal)' }} /> Unified Emergency: <strong>112</strong>
           </p>
           <p style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', marginBottom: '8px', fontSize: '14px' }}>
             <Mail size={16} style={{ color: 'var(--accent-cyan)' }} /> support@apadhaseva.in

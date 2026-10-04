@@ -47,7 +47,53 @@ const Header = () => {
           🇮🇳 Made in Bharat
         </div>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          <NavLink to="/" style={({ isActive }) => ({
+            textDecoration: 'none',
+            color: isActive ? 'var(--primary-color)' : 'var(--text-main)',
+            fontWeight: isActive ? '700' : '500',
+            fontSize: '14px'
+          })}>Home</NavLink>
+
+          <NavLink to="/first-aid" style={({ isActive }) => ({
+            textDecoration: 'none',
+            color: isActive ? 'var(--primary-color)' : 'var(--text-main)',
+            fontWeight: isActive ? '700' : '500',
+            fontSize: '14px'
+          })}>First Aid</NavLink>
+
+          <NavLink to="/driver" style={({ isActive }) => ({
+            textDecoration: 'none',
+            color: isActive ? 'var(--primary-color)' : '#0f172a',
+            fontWeight: isActive ? '700' : '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '13px',
+            background: '#fef2f2',
+            padding: '5px 10px',
+            borderRadius: '8px',
+            border: '1px solid #fee2e2'
+          })}>
+            <Truck size={15} color="var(--primary-color)" /> Driver Console
+          </NavLink>
+
+          <NavLink to="/admin" style={({ isActive }) => ({
+            textDecoration: 'none',
+            color: isActive ? 'var(--accent-teal)' : '#0f172a',
+            fontWeight: isActive ? '700' : '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '13px',
+            background: '#f0fdf4',
+            padding: '5px 10px',
+            borderRadius: '8px',
+            border: '1px solid #dcfce7'
+          })}>
+            <Shield size={15} color="var(--accent-teal)" /> Admin Desk
+          </NavLink>
+
           {isLoggedIn ? (
             <>
               <NavLink to="/dashboard" style={({ isActive }) => ({
@@ -57,10 +103,9 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '14px',
-                transition: 'color 0.2s'
+                fontSize: '14px'
               })}>
-                <Activity size={16} /> Dashboard
+                <Activity size={15} /> Dashboard
               </NavLink>
               
               <NavLink to="/book" style={({ isActive }) => ({
@@ -70,42 +115,9 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '14px',
-                transition: 'color 0.2s'
+                fontSize: '14px'
               })}>
-                <PlusCircle size={16} /> Book
-              </NavLink>
-
-              <NavLink to="/driver" style={({ isActive }) => ({
-                textDecoration: 'none',
-                color: isActive ? 'var(--primary-color)' : '#0f172a',
-                fontWeight: isActive ? '700' : '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '14px',
-                background: '#fef2f2',
-                padding: '4px 10px',
-                borderRadius: '8px',
-                border: '1px solid #fee2e2'
-              })}>
-                <Truck size={16} color="var(--primary-color)" /> Driver
-              </NavLink>
-
-              <NavLink to="/admin" style={({ isActive }) => ({
-                textDecoration: 'none',
-                color: isActive ? 'var(--accent-teal)' : '#0f172a',
-                fontWeight: isActive ? '700' : '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '14px',
-                background: '#f0fdf4',
-                padding: '4px 10px',
-                borderRadius: '8px',
-                border: '1px solid #dcfce7'
-              })}>
-                <Shield size={16} color="var(--accent-teal)" /> Admin
+                <PlusCircle size={15} /> Book
               </NavLink>
 
               <NavLink to="/history" style={({ isActive }) => ({
@@ -115,10 +127,9 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '14px',
-                transition: 'color 0.2s'
+                fontSize: '14px'
               })}>
-                <FileText size={16} /> History
+                <FileText size={15} /> History
               </NavLink>
 
               <NavLink to="/profile" style={({ isActive }) => ({
@@ -128,10 +139,9 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '14px',
-                transition: 'color 0.2s'
+                fontSize: '14px'
               })}>
-                <User size={16} /> Profile
+                <User size={15} /> Profile
               </NavLink>
 
               <NavLink to="/contact" style={({ isActive }) => ({
@@ -141,10 +151,9 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '15px',
-                transition: 'color 0.2s'
+                fontSize: '14px'
               })}>
-                <Phone size={16} /> Emergency
+                <Phone size={15} /> Emergency
               </NavLink>
 
               <button onClick={handleLogout} style={{
@@ -155,34 +164,26 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '15px',
-                cursor: 'pointer',
-                transition: 'color 0.2s'
-              }} onMouseOver={(e) => e.target.style.color = 'var(--primary-color)'} onMouseOut={(e) => e.target.style.color = '#64748b'}>
-                <LogOut size={16} /> Logout
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}>
+                <LogOut size={15} /> Logout
               </button>
             </>
           ) : (
             <>
-              <NavLink to="/" style={({ isActive }) => ({
-                textDecoration: 'none',
-                color: isActive ? 'var(--primary-color)' : 'var(--text-main)',
-                fontWeight: isActive ? '700' : '500',
-                fontSize: '15px'
-              })}>Home</NavLink>
-              
               <NavLink to="/login" style={({ isActive }) => ({
                 textDecoration: 'none',
                 color: isActive ? 'var(--primary-color)' : 'var(--text-main)',
                 fontWeight: isActive ? '700' : '500',
-                fontSize: '15px'
+                fontSize: '14px'
               })}>Login</NavLink>
 
               <NavLink to="/register" style={({ isActive }) => ({
                 textDecoration: 'none',
                 color: isActive ? 'var(--primary-color)' : 'var(--text-main)',
                 fontWeight: isActive ? '700' : '500',
-                fontSize: '15px'
+                fontSize: '14px'
               })}>Register</NavLink>
 
               <NavLink to="/contact" style={({ isActive }) => ({
@@ -192,9 +193,9 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: '15px'
+                fontSize: '14px'
               })}>
-                <Phone size={16} /> Emergency
+                <Phone size={15} /> Emergency Contact
               </NavLink>
             </>
           )}
