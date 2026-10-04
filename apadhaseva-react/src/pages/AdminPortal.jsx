@@ -42,24 +42,23 @@ const AdminPortal = () => {
   // New Hospital Admin Form State
   const [newAdmin, setNewAdmin] = useState({
     hospital: '',
-    name: '',
-    email: '',
-    phone: '',
+    address: '',
+    state: 'Telangana',
     totalBeds: 100,
     emptyBeds: 20,
     icuBeds: 5
   });
 
-  // Registered Hospital ER Administrators & Bed Capacities
+  // Registered Hospital ER & Bed Capacities
   const [hospitalAdmins, setHospitalAdmins] = useState(() => {
     const saved = localStorage.getItem('apadhaseva_hospital_admins');
     if (saved) {
       try { return JSON.parse(saved); } catch(e) {}
     }
     return [
-      { id: 'HOSP-01', hospital: 'CARE Hospitals, Gachibowli', name: 'Dr. A. K. Sharma', email: 'er.gachibowli@carehospitals.com', phone: '+91 98490 11111', totalBeds: 250, emptyBeds: 42, icuBeds: 12 },
-      { id: 'HOSP-02', hospital: 'Apollo Hospitals, Jubilee Hills', name: 'Dr. Sunita Reddy', email: 'er.desk@apollojubilee.com', phone: '+91 98490 22222', totalBeds: 380, emptyBeds: 68, icuBeds: 18 },
-      { id: 'HOSP-03', hospital: 'KIMS Hospitals, Begumpet', name: 'Dr. Rajesh Varma', email: 'er@kimshospitals.com', phone: '+91 98490 33333', totalBeds: 300, emptyBeds: 54, icuBeds: 15 }
+      { id: 'HOSP-01', hospital: 'CARE Hospitals', address: 'Plot 11, Gachibowli, Hyderabad', state: 'Telangana', totalBeds: 250, emptyBeds: 42, icuBeds: 12 },
+      { id: 'HOSP-02', hospital: 'Apollo Hospitals', address: 'Road No. 72, Jubilee Hills, Hyderabad', state: 'Telangana', totalBeds: 380, emptyBeds: 68, icuBeds: 18 },
+      { id: 'HOSP-03', hospital: 'KIMS Hospitals', address: 'Minister Road, Begumpet, Hyderabad', state: 'Telangana', totalBeds: 300, emptyBeds: 54, icuBeds: 15 }
     ];
   });
 
@@ -142,17 +141,16 @@ const AdminPortal = () => {
 
   const handleAddAdminSubmit = (e) => {
     e.preventDefault();
-    if (!newAdmin.hospital || !newAdmin.name || !newAdmin.email) {
-      alert("Please fill in Hospital Name, Administrator Name, and Official Email.");
+    if (!newAdmin.hospital || !newAdmin.address) {
+      alert("Please fill in Hospital Name and Hospital Address.");
       return;
     }
 
     const created = {
       id: `HOSP-0${hospitalAdmins.length + 1}`,
       hospital: newAdmin.hospital,
-      name: newAdmin.name,
-      email: newAdmin.email,
-      phone: newAdmin.phone || '+91 98490 00000',
+      address: newAdmin.address,
+      state: newAdmin.state || 'Telangana',
       totalBeds: Number(newAdmin.totalBeds) || 100,
       emptyBeds: Number(newAdmin.emptyBeds) || 20,
       icuBeds: Number(newAdmin.icuBeds) || 5
@@ -160,7 +158,7 @@ const AdminPortal = () => {
 
     setHospitalAdmins(prev => [...prev, created]);
     setShowAdminModal(false);
-    setNewAdmin({ hospital: '', name: '', email: '', phone: '', totalBeds: 100, emptyBeds: 20, icuBeds: 5 });
+    setNewAdmin({ hospital: '', address: '', state: 'Telangana', totalBeds: 100, emptyBeds: 20, icuBeds: 5 });
   };
 
   const handleExportLogs = () => {
@@ -168,7 +166,7 @@ const AdminPortal = () => {
       + "DispatchID,Patient,Condition,Priority,AssignedVehicle,Hospital,Status\n"
       + activeDispatches.map(e => `${e.id},${e.patient},${e.condition},${e.priority},${e.assignedVehicle},${e.hospital},${e.status}`).join("\n");
     
-    const encodedUri = encodeURI(csvContent);
+    const encodedUri = encodeURI(encodeURI(csvContent));
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", `apadhaseva_emergency_logs_${Date.now()}.csv`);
@@ -256,7 +254,7 @@ const AdminPortal = () => {
       <div className="glass-card" style={{ padding: '24px', marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Building2 size={22} color="#2563eb" /> Connected Hospital ER Admins & Bed Inventory ({hospitalAdmins.length})
+            <Building2 size={22} color="#2563eb" /> Connected Hospital Network & Bed Inventory ({hospitalAdmins.length})
           </h3>
           <button 
             onClick={() => setShowAdminModal(true)}
@@ -283,8 +281,8 @@ const AdminPortal = () => {
                 <div style={{ fontWeight: '800', fontSize: '15px', color: 'var(--secondary-color)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   🏥 {hosp.hospital}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Admin: <strong>{hosp.name}</strong> • {hosp.email}
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  📍 {hosp.address}, <strong>{hosp.state}</strong>
                 </div>
               </div>
 
@@ -295,9 +293,6 @@ const AdminPortal = () => {
                 </span>
                 <span style={{ background: '#dcfce7', color: '#15803d', padding: '6px 10px', borderRadius: '8px', border: '1px solid #86efac' }}>
                   🟢 Empty: {hosp.emptyBeds} Beds
-                </span>
-                <span style={{ background: '#fef2f2', color: '#b91c1c', padding: '6px 10px', borderRadius: '8px', border: '1px solid #fca5a5' }}>
-                  🚨 ICU: {hosp.icuBeds} Beds
                 </span>
               </div>
             </div>
@@ -578,29 +573,34 @@ const AdminPortal = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Admin Full Name *</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Dr. A. K. Sharma"
-                    value={newAdmin.name}
-                    onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Official ER Email *</label>
-                  <input 
-                    type="email" 
-                    required
-                    placeholder="er.admin@carehospitals.com"
-                    value={newAdmin.email}
-                    onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                  />
-                </div>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Hospital Address / Location *</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Road No. 72, Jubilee Hills, Hyderabad"
+                  value={newAdmin.address}
+                  onChange={(e) => setNewAdmin({...newAdmin, address: e.target.value})}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>State *</label>
+                <select 
+                  value={newAdmin.state}
+                  onChange={(e) => setNewAdmin({...newAdmin, state: e.target.value})}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white' }}
+                >
+                  <option value="Telangana">Telangana</option>
+                  <option value="Andhra Pradesh">Andhra Pradesh</option>
+                  <option value="Tamil Nadu">Tamil Nadu</option>
+                  <option value="Karnataka">Karnataka</option>
+                  <option value="Maharashtra">Maharashtra</option>
+                  <option value="Delhi">Delhi NCR</option>
+                  <option value="Kerala">Kerala</option>
+                  <option value="Gujarat">Gujarat</option>
+                </select>
               </div>
 
               {/* Bed Inventory Inputs */}
