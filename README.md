@@ -1,10 +1,14 @@
 # 🚨 APADHA SEVA (ఆపద సేవ)
 > **Emergency Healthcare, Ambulance Booking & Live Tracking Platform**
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?logo=vercel&logoColor=white)](https://apadha-seva-bharat.vercel.app/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-11.0-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+🔗 **Live Web Application:** [https://apadha-seva-bharat.vercel.app/](https://apadha-seva-bharat.vercel.app/)
+🎬 **Video Demo:** [Watch on Google Drive](https://drive.google.com/file/d/1W_kK3uZiteZ88f7NY0ebunnxo9XNFyHc/view?usp=sharing)
 
 ---
 
