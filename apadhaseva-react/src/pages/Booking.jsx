@@ -679,6 +679,8 @@ ETA: ${selectedAmbulance ? selectedAmbulance.eta : 5} Minutes`;
     navigate('/track');
   };
 
+  const primaryTown = getPrimaryTown(locationName);
+
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
 
