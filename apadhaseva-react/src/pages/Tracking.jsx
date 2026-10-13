@@ -69,6 +69,16 @@ const Tracking = () => {
     return localBookings.length > 0 && localBookings[0].pickup ? localBookings[0].pickup : 'Target Emergency Location';
   });
 
+  const [targetHospital, setTargetHospital] = useState(() => {
+    const localBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    return localBookings.length > 0 && localBookings[0].hospital ? localBookings[0].hospital : 'Nearest Emergency Hospital';
+  });
+
+  const [fleetType, setFleetType] = useState(() => {
+    const localBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    return localBookings.length > 0 && localBookings[0].type ? localBookings[0].type : 'Emergency Ambulance Fleet';
+  });
+
   // Dynamically place approaching ambulance ~1.5 km offset from patient's exact location
   const [ambCoords, setAmbCoords] = useState(() => [
     patientCoords[0] + 0.012,
@@ -204,10 +214,10 @@ const Tracking = () => {
             </div>
             
             <p style={{ fontSize: '14px', color: 'var(--text-main)', marginBottom: '8px' }}>
-              <strong>Ambulance Fleet:</strong> Advanced Cardiac ICU (AP-09-AB-1234)
+              <strong>Ambulance Fleet:</strong> {fleetType}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--text-main)', marginBottom: '20px' }}>
-              <strong>Hospital responders:</strong> NIMS Emergency Department
+              <strong>Target Hospital:</strong> {targetHospital}
             </p>
 
             <div style={{ display: 'flex', gap: '12px' }}>
