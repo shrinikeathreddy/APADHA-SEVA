@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Lock, HeartPulse } from 'lucide-react';
 import canvasConfetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
+import { subscribeUserToSNS, sendDirectSMS } from '../awsSns';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -56,6 +57,15 @@ const Register = () => {
       };
 
       await register(formData.email, formData.password, profileData);
+
+      // 1. Auto-subscribe the user to AWS SNS Alert Broadcast Topic
+      subscribeUserToSNS(formData.email, formData.phone);
+
+      // 2. Send Direct Confirmation SMS to the registered mobile number
+      sendDirectSMS(
+        formData.phone,
+        `WELCOME TO APADHA SEVA 🚑\nHello ${formData.fullName}, your account is active!\nRole: ${formData.role}\nYou will receive instant SMS alerts whenever an emergency ambulance is dispatched to your location.`
+      );
 
       // Trigger celebration
       canvasConfetti({

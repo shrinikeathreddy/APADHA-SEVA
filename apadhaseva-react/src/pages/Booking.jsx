@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { Search, MapPin, Hospital, Ambulance, AlertCircle, Compass, Users, Sparkles } from 'lucide-react';
 import canvasConfetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { sendDirectSMS, broadcastToSNSTopic } from '../awsSns';
 
 // Fix Leaflet marker icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -41,6 +42,16 @@ const MapRefresher = ({ coords }) => {
       map.flyTo(coords, 14, { animate: true, duration: 1.5 });
     }
   }, [coords, map]);
+  return null;
+};
+
+// Component to allow users to tap/click anywhere on the map to set exact pickup coordinates
+const MapClickHandler = ({ onLocationSelect }) => {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    }
+  });
   return null;
 };
 
@@ -108,8 +119,8 @@ const Booking = () => {
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return parseFloat((R * c).toFixed(1));
   };
@@ -126,7 +137,7 @@ const Booking = () => {
 
       const areaLower = h.area.toLowerCase();
       const nameLower = h.name.toLowerCase();
-      const isAreaMatch = locLower.includes(areaLower) || 
+      const isAreaMatch = locLower.includes(areaLower) ||
         (locLower.includes('medchal') && (areaLower.includes('medchal') || areaLower.includes('kompally') || nameLower.includes('medchal')));
 
       return { ...h, distance: dist, lat: hLat, lng: hLng, isAreaMatch };
@@ -182,10 +193,15 @@ const Booking = () => {
     setSuggestions([]);
   };
 
-  // HTML5 Live GPS Geolocation lookup
-  const handleLiveLocation = () => {
+  // Auto-detect exact live location on initial load
+  useEffect(() => {
+    handleLiveLocation(true);
+  }, []);
+
+  // HTML5 Live GPS Geolocation lookup with high accuracy
+  const handleLiveLocation = (silent = false) => {
     if (!navigator.geolocation) {
-      alert("GPS Geolocation is not supported by this browser.");
+      if (!silent) alert("GPS Geolocation is not supported by this browser.");
       return;
     }
 
@@ -204,12 +220,12 @@ const Booking = () => {
             setLocationName(data.display_name);
             setAddressInput(data.display_name);
           } else {
-            const formatted = `Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            const formatted = `Exact Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
             setLocationName(formatted);
             setAddressInput(formatted);
           }
         } catch (e) {
-          const formatted = `Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          const formatted = `Exact Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
           setLocationName(formatted);
           setAddressInput(formatted);
         }
@@ -218,10 +234,64 @@ const Booking = () => {
       },
       (error) => {
         setGpsStatus('idle');
-        alert("Unable to fetch your coordinates. Please verify your system or browser location permissions.");
+        if (!silent) {
+          alert("Unable to fetch exact GPS coordinates. Please search your area or click directly on the map.");
+        }
       },
-      { enableHighAccuracy: true, timeout: 6000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
+  };
+
+  // Direct map click pinpoint handler
+  const handleMapClick = async (lat, lng) => {
+    const coords = [lat, lng];
+    setMapCenter(coords);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await res.json();
+      if (data && data.display_name) {
+        setLocationName(data.display_name);
+        setAddressInput(data.display_name);
+      } else {
+        const formatted = `Pinpoint: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        setLocationName(formatted);
+        setAddressInput(formatted);
+      }
+    } catch (e) {
+      const formatted = `Pinpoint: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      setLocationName(formatted);
+      setAddressInput(formatted);
+    }
+  };
+
+  // Helper to publish emergency alert to AWS SNS topic & send direct SMS to user's phone
+  const sendAWSNotification = async (booking) => {
+    try {
+      const subject = `🚨 EMERGENCY DISPATCH: ${booking.id}`;
+      const message = `🚨 APADHA SEVA DISPATCH UPDATE 🚑
+---------------------------------------
+Booking ID: ${booking.id}
+Status: AMBULANCE DISPATCHED ✅
+Patient: ${booking.patient}
+Pickup Location: ${booking.pickup}
+Target Hospital: ${booking.hospital}
+Fleet Type: ${booking.type}
+ETA: ${selectedAmbulance ? selectedAmbulance.eta : 5} Minutes`;
+
+      // 1. Broadcast to all SNS subscribers (drivers, admins, public safety)
+      broadcastToSNSTopic(subject, message);
+
+      // 2. Direct SMS directly to patient's registered mobile number from signup portal
+      const patientPhone = userProfile?.phone || userProfile?.emergencyContactPhone;
+      if (patientPhone) {
+        sendDirectSMS(
+          patientPhone,
+          `APADHA SEVA UPDATE: Ambulance DISPATCHED! 🚑\nBooking ID: ${booking.id}\nAmbulance: ${booking.type}\nHospital: ${booking.hospital}\nETA: ${selectedAmbulance ? selectedAmbulance.eta : 5} Mins.`
+        );
+      }
+    } catch (snsErr) {
+      console.warn("AWS SNS publish notification warning:", snsErr);
+    }
   };
 
   const handleBookingSubmit = async () => {
@@ -236,13 +306,16 @@ const Booking = () => {
 
     const userId = currentUser ? currentUser.uid : 'anonymous';
     const bookingId = 'APS-' + Math.floor(100000 + Math.random() * 900000);
-    const patientLabel = bookingFor === 'myself' 
+    const patientLabel = bookingFor === 'myself'
       ? (userProfile?.fullName ? `${userProfile.fullName} (Self)` : 'Registered User (Self)')
       : 'Emergency Patient (Relative)';
 
     const newBooking = {
       userId: userId,
       id: bookingId,
+      coords: mapCenter,
+      lat: mapCenter[0],
+      lng: mapCenter[1],
       date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       patient: patientLabel,
       pickup: locationName,
@@ -260,9 +333,13 @@ const Booking = () => {
       console.warn("Firestore sync offline, saving locally:", dbErr);
     }
 
-    // 2. Cache locally in localStorage for offline availability
+    // 2. Cache locally in localStorage for offline availability & live tracking precision
     const localBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
     localStorage.setItem('bookings', JSON.stringify([newBooking, ...localBookings]));
+    localStorage.setItem('apadhaseva_latest_coords', JSON.stringify(mapCenter));
+
+    // 3. Dispatch AWS SNS Emergency Notification
+    sendAWSNotification(newBooking);
 
     // Trigger celebration
     canvasConfetti({
@@ -277,17 +354,17 @@ const Booking = () => {
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
-      
+
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 style={{ fontSize: '36px', color: 'var(--secondary-color)', marginBottom: '10px' }}>🚑 Request Ambulance Dispatch</h1>
         <p style={{ color: 'var(--text-muted)' }}>Provide emergency accident details, lock coordinates, and assign nearest fleets.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px' }}>
-        
+
         {/* Booking parameters column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
+
           {/* Location Form */}
           <div className="glass-card" style={{ padding: '30px', background: 'white' }}>
             <h3 style={{ fontSize: '18px', color: 'var(--secondary-color)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -297,7 +374,7 @@ const Booking = () => {
             {/* Address input */}
             <div style={{ position: 'relative', marginBottom: '15px' }}>
               <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-              <input 
+              <input
                 type="text"
                 placeholder="Search pickup coordinates (e.g. Madhapur)"
                 value={addressInput}
@@ -312,7 +389,7 @@ const Booking = () => {
                 }}
               />
               {searchLoading && <span style={{ position: 'absolute', right: '12px', top: '35%', fontSize: '12px', color: 'var(--text-muted)' }}>Searching...</span>}
-              
+
               {/* Autocomplete Suggestions Panel */}
               {suggestions.length > 0 && (
                 <div style={{
@@ -330,7 +407,7 @@ const Booking = () => {
                   overflowY: 'auto'
                 }}>
                   {suggestions.map((s, idx) => (
-                    <div 
+                    <div
                       key={idx}
                       onClick={() => selectSuggestion(s)}
                       style={{
@@ -350,7 +427,7 @@ const Booking = () => {
               )}
             </div>
 
-            <button 
+            <button
               onClick={handleLiveLocation}
               disabled={gpsStatus === 'loading'}
               className="btn-secondary"
@@ -358,7 +435,7 @@ const Booking = () => {
             >
               {gpsStatus === 'loading' ? <>📍 Fetching GPS location...</> : <>📍 Use Current Live Location</>}
             </button>
-            
+
             <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
               <strong>Current Coordinate Hub:</strong> {locationName}
             </p>
@@ -419,9 +496,12 @@ const Booking = () => {
 
           {/* Live Map Display */}
           <div className="glass-card" style={{ padding: '16px', background: 'white', minHeight: '380px' }}>
-            <h3 style={{ fontSize: '16px', color: 'var(--secondary-color)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h3 style={{ fontSize: '16px', color: 'var(--secondary-color)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Compass className="animate-spin" style={{ animationDuration: '6s' }} size={16} /> Live Radar Dispatch Grid
             </h3>
+            <p style={{ fontSize: '12px', color: '#166534', background: '#f0fdf4', padding: '6px 10px', borderRadius: '6px', marginBottom: '10px', border: '1px solid #bbf7d0', fontWeight: '600' }}>
+              📍 <strong>Exact Location Pin:</strong> Click or tap anywhere on the map below to pinpoint your exact gate/house location!
+            </p>
             <div style={{ height: '300px', width: '100%' }}>
               <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
@@ -429,17 +509,18 @@ const Booking = () => {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <Marker position={mapCenter} icon={currentLocIcon}>
-                  <Popup>🚑 Target Emergency Pickup Point</Popup>
+                  <Popup>🚑 Target Emergency Pickup Point<br /><strong>{locationName}</strong></Popup>
                 </Marker>
 
                 {/* Dynamically render pins for nearby hospitals sorted by proximity */}
                 {hospitalsList.map((h) => (
                   <Marker key={h.id} position={[h.lat, h.lng]} icon={hospitalPinIcon}>
-                    <Popup>🏥 {h.name}<br/>Proximity: <strong>{h.distance} km</strong></Popup>
+                    <Popup>🏥 {h.name}<br />Proximity: <strong>{h.distance} km</strong></Popup>
                   </Marker>
                 ))}
 
                 <MapRefresher coords={mapCenter} />
+                <MapClickHandler onLocationSelect={handleMapClick} />
               </MapContainer>
             </div>
           </div>
@@ -448,7 +529,7 @@ const Booking = () => {
 
         {/* Responders Selection column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
+
           {/* Hospital Selection */}
           <div className="glass-card" style={{ padding: '30px', background: 'white' }}>
             <h3 style={{ fontSize: '18px', color: 'var(--secondary-color)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -460,8 +541,8 @@ const Booking = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {hospitalsList.map((h, idx) => (
-                <div 
-                  key={h.id} 
+                <div
+                  key={h.id}
                   onClick={() => setSelectedHospital(h)}
                   style={{
                     padding: '14px 16px',
@@ -502,49 +583,49 @@ const Booking = () => {
             </div>
           </div>
 
-        {/* Ambulance Fleet Selection */}
-        <div className="glass-card" style={{ padding: '30px', background: 'white' }}>
-          <h3 style={{ fontSize: '18px', color: 'var(--secondary-color)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Ambulance size={20} style={{ color: 'var(--primary-color)' }} /> 4. Select Emergency Ambulance Fleet
-          </h3>
-          
-          {/* Free Ambulance Banner */}
-          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', color: '#166534', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            🎉 All Ambulance Dispatches are 100% FREE OF COST (Govt Emergency Service / APADHA SEVA)
-          </div>
+          {/* Ambulance Fleet Selection */}
+          <div className="glass-card" style={{ padding: '30px', background: 'white' }}>
+            <h3 style={{ fontSize: '18px', color: 'var(--secondary-color)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Ambulance size={20} style={{ color: 'var(--primary-color)' }} /> 4. Select Emergency Ambulance Fleet
+            </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {ambulances.map((a) => (
-              <div 
-                key={a.id}
-                onClick={() => setSelectedAmbulance(a)}
-                style={{
-                  padding: '14px 16px',
-                  borderRadius: '10px',
-                  border: selectedAmbulance?.id === a.id ? '2px solid var(--primary-color)' : '1px solid #e2e8f0',
-                  background: selectedAmbulance?.id === a.id ? '#fef2f2' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <div>
-                  <h4 style={{ fontSize: '14px', color: 'var(--secondary-color)' }}>{a.name}</h4>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    ETA: <strong>{a.eta} minutes</strong> | Proximity: {a.distance} km
-                  </p>
+            {/* Free Ambulance Banner */}
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', color: '#166534', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              🎉 All Ambulance Dispatches are 100% FREE OF COST (Govt Emergency Service / APADHA SEVA)
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {ambulances.map((a) => (
+                <div
+                  key={a.id}
+                  onClick={() => setSelectedAmbulance(a)}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: '10px',
+                    border: selectedAmbulance?.id === a.id ? '2px solid var(--primary-color)' : '1px solid #e2e8f0',
+                    background: selectedAmbulance?.id === a.id ? '#fef2f2' : 'transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <div>
+                    <h4 style={{ fontSize: '14px', color: 'var(--secondary-color)' }}>{a.name}</h4>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      ETA: <strong>{a.eta} minutes</strong> | Proximity: {a.distance} km
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontWeight: '800', fontSize: '13px', color: '#166534', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '4px 10px', borderRadius: '6px' }}>
+                      FREE (₹0)
+                    </span>
+                  </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontWeight: '800', fontSize: '13px', color: '#166534', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '4px 10px', borderRadius: '6px' }}>
-                    FREE (₹0)
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
           {/* Booking Summary Section */}
           <div className="glass-card" style={{
@@ -560,9 +641,9 @@ const Booking = () => {
               <p><strong>Estimated ETA:</strong> <span style={{ color: 'var(--primary-color)', fontWeight: '700' }}>{selectedAmbulance ? `${selectedAmbulance.eta} Minutes` : '--'}</span></p>
             </div>
 
-            <button 
+            <button
               onClick={handleBookingSubmit}
-              className="btn-primary" 
+              className="btn-primary"
               style={{ width: '100%', justifyContent: 'center', padding: '14px' }}
             >
               <Sparkles size={16} /> Confirm Booking & Dispatch
@@ -584,11 +665,11 @@ const Booking = () => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '24px'
         }}>
-          
+
           <div className="glass-card" style={{ padding: '20px', background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <img 
-              src="/stay_calm.png" 
-              alt="Stay Calm" 
+            <img
+              src="/stay_calm.png"
+              alt="Stay Calm"
               style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '15px' }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
@@ -597,9 +678,9 @@ const Booking = () => {
           </div>
 
           <div className="glass-card" style={{ padding: '20px', background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <img 
-              src="/do_not_move.png" 
-              alt="Do Not Move Injured" 
+            <img
+              src="/do_not_move.png"
+              alt="Do Not Move Injured"
               style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '15px' }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
@@ -608,9 +689,9 @@ const Booking = () => {
           </div>
 
           <div className="glass-card" style={{ padding: '20px', background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <img 
-              src="/first_aid.png" 
-              alt="First Aid Kit" 
+            <img
+              src="/first_aid.png"
+              alt="First Aid Kit"
               style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '15px' }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
@@ -619,9 +700,9 @@ const Booking = () => {
           </div>
 
           <div className="glass-card" style={{ padding: '20px', background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <img 
-              src="/clear_road.png" 
-              alt="Clear Road" 
+            <img
+              src="/clear_road.png"
+              alt="Clear Road"
               style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '15px' }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />

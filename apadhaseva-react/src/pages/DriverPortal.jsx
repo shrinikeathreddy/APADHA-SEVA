@@ -17,6 +17,7 @@ import {
   Stethoscope,
   Heart
 } from 'lucide-react';
+import { sendDirectSMS } from '../awsSns';
 
 const DriverPortal = () => {
   const navigate = useNavigate();
@@ -118,6 +119,14 @@ const DriverPortal = () => {
     setActiveTrip(updatedTrip);
     setDriverState('BUSY');
     setDispatches(prev => prev.filter(d => d.id !== dispatch.id));
+
+    // Send direct SMS to patient phone number from signup
+    if (dispatch.phone) {
+      sendDirectSMS(
+        dispatch.phone,
+        `🚑 APADHA SEVA ALERT: Driver Rajesh Sharma HAS ACCEPTED YOUR DISPATCH!\nBooking ID: ${dispatch.id}\nStatus: Ambulance DISPATCHED & En Route 🚨\nETA: ${dispatch.eta}\nDestination: ${dispatch.destination}`
+      );
+    }
   };
 
   const handleAdvanceStatus = () => {
@@ -134,6 +143,15 @@ const DriverPortal = () => {
     const currentIdx = steps.findIndex(s => s.status === activeTrip.status);
     if (currentIdx < steps.length - 1) {
       const nextStep = steps[currentIdx + 1];
+
+      // Send status SMS to patient
+      if (activeTrip.phone) {
+        sendDirectSMS(
+          activeTrip.phone,
+          `🏥 APADHA SEVA UPDATE: Status for Booking ${activeTrip.id}: ${nextStep.label.toUpperCase()}`
+        );
+      }
+
       if (nextStep.status === 'COMPLETED') {
         // Complete the trip
         setCompletedTrips(prev => [{

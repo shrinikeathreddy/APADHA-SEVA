@@ -48,9 +48,32 @@ const RecenterMap = ({ points }) => {
 const Tracking = () => {
   const navigate = useNavigate();
   
-  // Hyderabad core coordinate centers
-  const patientCoords = [17.4483, 78.3741]; // Madhapur
-  const [ambCoords, setAmbCoords] = useState([17.4246, 78.4298]); // Starting near NIMS Hospital
+  // Get patient's EXACT booked coordinates from latest booking or localStorage
+  const [patientCoords, setPatientCoords] = useState(() => {
+    const saved = localStorage.getItem('apadhaseva_latest_coords');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === 2) return parsed;
+      } catch (e) {}
+    }
+    const localBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    if (localBookings.length > 0 && localBookings[0].coords) {
+      return localBookings[0].coords;
+    }
+    return [17.4483, 78.3741]; // Default fallback
+  });
+
+  const [pickupAddress, setPickupAddress] = useState(() => {
+    const localBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    return localBookings.length > 0 && localBookings[0].pickup ? localBookings[0].pickup : 'Target Emergency Location';
+  });
+
+  // Dynamically place approaching ambulance ~1.5 km offset from patient's exact location
+  const [ambCoords, setAmbCoords] = useState(() => [
+    patientCoords[0] + 0.012,
+    patientCoords[1] + 0.010
+  ]);
   const [eta, setEta] = useState(8);
   const [statusStep, setStatusStep] = useState(2); // 0: confirmed, 1: assigned, 2: dispatched, 3: on the way, 4: reached
 
@@ -70,11 +93,11 @@ const Tracking = () => {
       console.warn("Firestore tracking listener error:", err);
     });
 
-    // 2. Stream simulated driver GPS movement into Firestore so all listeners update live
-    const startLat = 17.4246;
-    const startLng = 78.4298;
-    const destLat = 17.4483;
-    const destLng = 78.3741;
+    // 2. Stream simulated driver GPS movement towards the patient's exact coordinates
+    const startLat = patientCoords[0] + 0.012;
+    const startLng = patientCoords[1] + 0.010;
+    const destLat = patientCoords[0];
+    const destLng = patientCoords[1];
     
     let stepCount = 0;
     const totalSteps = 20;
@@ -116,7 +139,7 @@ const Tracking = () => {
       clearInterval(interval);
       unsubscribeSnapshot();
     };
-  }, []);
+  }, [patientCoords]);
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1100px', margin: '0 auto', minHeight: '85vh' }}>
@@ -124,7 +147,7 @@ const Tracking = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <h1 style={{ fontSize: '32px', color: 'var(--secondary-color)' }}>🚑 Live Ambulance Tracking</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Emergency rescue in progress. The responder crew is currently routing to your location.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Emergency rescue routing directly to: <strong>{pickupAddress}</strong></p>
         </div>
         <button onClick={() => navigate('/dashboard')} className="btn-secondary">
           <ArrowLeft size={16} /> Dashboard
@@ -144,7 +167,7 @@ const Tracking = () => {
               
               {/* Patient Pin */}
               <Marker position={patientCoords} icon={patientIcon}>
-                <Popup>📍 Your Location (Emergency Dispatch Point)</Popup>
+                <Popup>📍 Target Emergency Location:<br /><strong>{pickupAddress}</strong></Popup>
               </Marker>
               
               {/* Ambulance Pin */}
