@@ -69,6 +69,7 @@ const Booking = () => {
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [selectedAmbulance, setSelectedAmbulance] = useState(null);
   const [bookingFor, setBookingFor] = useState('myself'); // myself, other
+  const [hospitalTypeFilter, setHospitalTypeFilter] = useState('ALL'); // ALL, PRIVATE, GOVT
 
   // Fast preset lookup for popular Telangana & Indian cities/towns
   const KNOWN_AREAS = {
@@ -94,36 +95,26 @@ const Booking = () => {
     'uppal': { name: 'Uppal, Hyderabad, Telangana', coords: [17.4018, 78.5602], town: 'Uppal' }
   };
 
-  // Base Hyderabad / Medchal hospitals with both Normal & ICU bed inventory
+  // Base Hyderabad / Medchal hospitals with both Normal & ICU bed inventory and PRIVATE/GOVT tag
   const baseHospitals = [
-    // Medchal Zone Hospitals
-    { id: 'h_med1', name: 'Medchal Area Government Hospital & ICU', area: 'Medchal', offset: [0.035, 0.025], normalBeds: 45, icuBeds: 12, oxygenBeds: 18, phone: '040-27601122' },
-    { id: 'h_med2', name: 'Malla Reddy Narayana Emergency Hospital', area: 'Medchal', offset: [0.025, 0.018], normalBeds: 60, icuBeds: 18, oxygenBeds: 25, phone: '040-23782222' },
-    { id: 'h_med3', name: 'Kompally Lifecare Emergency Hospital', area: 'Kompally', offset: [0.018, 0.012], normalBeds: 30, icuBeds: 9, oxygenBeds: 12, phone: '040-27903344' },
-    { id: 'h_med4', name: 'CMR Emergency Hospital (Medchal)', area: 'Medchal', offset: [0.040, 0.030], normalBeds: 25, icuBeds: 7, oxygenBeds: 10, phone: '040-27609988' },
+    // Top-Rated Private Super Specialty Hospitals
+    { id: 'h_pvt_apollo', name: 'Apollo Critical Trauma Care', area: 'Madhapur', sector: 'PRIVATE', offset: [-0.009, 0.011], normalBeds: 50, icuBeds: 18, oxygenBeds: 24, phone: '040-23607777' },
+    { id: 'h_pvt_yashoda', name: 'Yashoda Hospital Emergency Unit', area: 'Secunderabad', sector: 'PRIVATE', offset: [0.020, 0.015], normalBeds: 65, icuBeds: 22, oxygenBeds: 30, phone: '040-27703999' },
+    { id: 'h_pvt_kims', name: 'KIMS Hospital Trauma Center', area: 'Secunderabad', sector: 'PRIVATE', offset: [0.018, 0.010], normalBeds: 55, icuBeds: 18, oxygenBeds: 28, phone: '040-44885000' },
+    { id: 'h_pvt_aig', name: 'AIG Emergency & Trauma Institute', area: 'Gachibowli', sector: 'PRIVATE', offset: [-0.010, -0.005], normalBeds: 80, icuBeds: 25, oxygenBeds: 35, phone: '040-42444444' },
+    { id: 'h_pvt_care', name: 'Care Emergency Multispecialty', area: 'Hitec City', sector: 'PRIVATE', offset: [0.008, -0.005], normalBeds: 45, icuBeds: 12, oxygenBeds: 20, phone: '040-30418888' },
+    { id: 'h_pvt_mallareddy', name: 'Malla Reddy Narayana Emergency Hospital', area: 'Medchal', sector: 'PRIVATE', offset: [0.025, 0.018], normalBeds: 60, icuBeds: 18, oxygenBeds: 25, phone: '040-23782222' },
+    { id: 'h_pvt_kompally', name: 'Kompally Lifecare Private Hospital', area: 'Kompally', sector: 'PRIVATE', offset: [0.018, 0.012], normalBeds: 32, icuBeds: 10, oxygenBeds: 14, phone: '040-27903344' },
+    { id: 'h_pvt_cmr', name: 'CMR Emergency Hospital (Private)', area: 'Medchal', sector: 'PRIVATE', offset: [0.040, 0.030], normalBeds: 28, icuBeds: 8, oxygenBeds: 12, phone: '040-27609988' },
+    { id: 'h_pvt_slg', name: 'SLG Hospitals & Critical Care', area: 'Bachupally', sector: 'PRIVATE', offset: [0.030, -0.010], normalBeds: 42, icuBeds: 11, oxygenBeds: 18, phone: '040-23880000' },
+    { id: 'h_pvt_omni', name: 'Omni Hospital Trauma Center', area: 'Kukatpally', sector: 'PRIVATE', offset: [0.025, -0.015], normalBeds: 35, icuBeds: 9, oxygenBeds: 14, phone: '040-30999999' },
+    { id: 'h_pvt_kamineni', name: 'Kamineni Emergency Hospital', area: 'LB Nagar', sector: 'PRIVATE', offset: [-0.020, 0.030], normalBeds: 44, icuBeds: 12, oxygenBeds: 18, phone: '040-39879999' },
 
-    // Secunderabad / Alwal Area Hospitals
-    { id: 'h_sec1', name: 'Gandhi General Hospital & Trauma Center', area: 'Secunderabad', offset: [0.012, 0.008], normalBeds: 85, icuBeds: 24, oxygenBeds: 40, phone: '040-27505566' },
-    { id: 'h_sec2', name: 'Yashoda Hospital Emergency Unit', area: 'Secunderabad', offset: [0.020, 0.015], normalBeds: 48, icuBeds: 16, oxygenBeds: 22, phone: '040-27703999' },
-    { id: 'h_sec3', name: 'KIMS Hospital Trauma Center', area: 'Secunderabad', offset: [0.018, 0.010], normalBeds: 55, icuBeds: 15, oxygenBeds: 28, phone: '040-44885000' },
-
-    // Kukatpally / Miyapur / Bachupally Hospitals
-    { id: 'h_kuk1', name: 'Omni Hospital Trauma Center', area: 'Kukatpally', offset: [0.025, -0.015], normalBeds: 35, icuBeds: 9, oxygenBeds: 14, phone: '040-30999999' },
-    { id: 'h_kuk2', name: 'Prime Emergency Hospital', area: 'Kukatpally', offset: [0.020, -0.010], normalBeds: 28, icuBeds: 7, oxygenBeds: 11, phone: '040-23057777' },
-    { id: 'h_kuk3', name: 'SLG Hospitals & Critical Care', area: 'Bachupally', offset: [0.030, -0.010], normalBeds: 42, icuBeds: 11, oxygenBeds: 18, phone: '040-23880000' },
-
-    // Gachibowli / Madhapur / Hitec City Hospitals
-    { id: 'h_gach1', name: 'AIG Emergency & Trauma Institute', area: 'Gachibowli', offset: [-0.010, -0.005], normalBeds: 70, icuBeds: 20, oxygenBeds: 35, phone: '040-42444444' },
-    { id: 'h_gach2', name: 'Apollo Critical Trauma Care', area: 'Madhapur', offset: [-0.009, 0.011], normalBeds: 38, icuBeds: 8, oxygenBeds: 16, phone: '040-23607777' },
-    { id: 'h_gach3', name: 'Care Emergency Multispecialty', area: 'Hitec City', offset: [0.008, -0.005], normalBeds: 45, icuBeds: 10, oxygenBeds: 20, phone: '040-30418888' },
-
-    // Central Hyderabad Hospitals
-    { id: 'h_hyd1', name: 'NIMS Trauma Emergency Center', area: 'Punjagutta', offset: [0.005, -0.003], normalBeds: 65, icuBeds: 18, oxygenBeds: 30, phone: '040-23489000' },
-    { id: 'h_hyd2', name: 'Osmania General Emergency Unit', area: 'Afzal Gunj', offset: [-0.015, -0.012], normalBeds: 90, icuBeds: 22, oxygenBeds: 45, phone: '040-24600121' },
-
-    // LB Nagar Zone Hospitals
-    { id: 'h_lbn1', name: 'Kamineni Emergency Hospital', area: 'LB Nagar', offset: [-0.020, 0.030], normalBeds: 44, icuBeds: 12, oxygenBeds: 18, phone: '040-39879999' },
-    { id: 'h_lbn2', name: 'Aware Gleneagles Global Hospital', area: 'LB Nagar', offset: [-0.025, 0.035], normalBeds: 36, icuBeds: 10, oxygenBeds: 15, phone: '040-24111111' }
+    // Government General Hospitals (For patients who prefer free Govt facilities)
+    { id: 'h_gvt_gandhi', name: 'Gandhi General Hospital & Trauma Center', area: 'Secunderabad', sector: 'GOVT', offset: [0.012, 0.008], normalBeds: 85, icuBeds: 24, oxygenBeds: 40, phone: '040-27505566' },
+    { id: 'h_gvt_medchal', name: 'Medchal Area Government Hospital & ICU', area: 'Medchal', sector: 'GOVT', offset: [0.035, 0.025], normalBeds: 45, icuBeds: 12, oxygenBeds: 18, phone: '040-27601122' },
+    { id: 'h_gvt_osmania', name: 'Osmania General Emergency Unit', area: 'Afzal Gunj', sector: 'GOVT', offset: [-0.015, -0.012], normalBeds: 90, icuBeds: 22, oxygenBeds: 45, phone: '040-24600121' },
+    { id: 'h_gvt_nims', name: 'NIMS Trauma Emergency Center', area: 'Punjagutta', sector: 'GOVT', offset: [0.005, -0.003], normalBeds: 65, icuBeds: 18, oxygenBeds: 30, phone: '040-23489000' }
   ];
 
   // Dynamically calculate nearby hospitals ordered by area match first, then proximity distance
@@ -181,15 +172,86 @@ const Booking = () => {
         return { ...h, distance: dist, lat: hLat, lng: hLng, isAreaMatch };
       });
     } else {
-      // Dynamically generate local emergency hospitals tailored to this specific city/district!
+      // Dynamically generate top PRIVATE multispecialty hospitals + Government hospital tailored to this city!
       pool = [
         {
-          id: `h_dyn_1`,
+          id: `h_dyn_pvt1`,
+          name: `${primaryTown} Super Specialty Emergency Hospital`,
+          area: primaryTown,
+          sector: 'PRIVATE',
+          lat: uLat + 0.008,
+          lng: uLng + 0.006,
+          distance: 1.1,
+          normalBeds: 45,
+          icuBeds: 15,
+          oxygenBeds: 20,
+          phone: '08719-253300',
+          isAreaMatch: true
+        },
+        {
+          id: `h_dyn_pvt2`,
+          name: `Prathima Emergency & Trauma Care (${primaryTown})`,
+          area: primaryTown,
+          sector: 'PRIVATE',
+          lat: uLat + 0.014,
+          lng: uLng + 0.010,
+          distance: 1.9,
+          normalBeds: 36,
+          icuBeds: 12,
+          oxygenBeds: 18,
+          phone: '08719-254422',
+          isAreaMatch: true
+        },
+        {
+          id: `h_dyn_pvt3`,
+          name: `Sri Krishna Multispecialty & Critical Care`,
+          area: primaryTown,
+          sector: 'PRIVATE',
+          lat: uLat - 0.012,
+          lng: uLng + 0.014,
+          distance: 2.8,
+          normalBeds: 30,
+          icuBeds: 8,
+          oxygenBeds: 12,
+          phone: '08719-251144',
+          isAreaMatch: true
+        },
+        {
+          id: `h_dyn_pvt4`,
+          name: `Lifeline Private Trauma & Cardiac Care`,
+          area: primaryTown,
+          sector: 'PRIVATE',
+          lat: uLat + 0.020,
+          lng: uLng - 0.012,
+          distance: 3.6,
+          normalBeds: 25,
+          icuBeds: 7,
+          oxygenBeds: 10,
+          phone: '08719-252288',
+          isAreaMatch: true
+        },
+        {
+          id: `h_dyn_pvt5`,
+          name: `Apollo Reach Emergency Clinic (${primaryTown})`,
+          area: primaryTown,
+          sector: 'PRIVATE',
+          lat: uLat - 0.018,
+          lng: uLng - 0.015,
+          distance: 4.2,
+          normalBeds: 20,
+          icuBeds: 6,
+          oxygenBeds: 8,
+          phone: '08719-259900',
+          isAreaMatch: true
+        },
+        {
+          id: `h_dyn_gvt1`,
           name: `${primaryTown} Area Government Hospital & ICU`,
           area: primaryTown,
-          lat: uLat + 0.009,
-          lng: uLng + 0.007,
-          distance: 1.2,
+          sector: 'GOVT',
+          lat: uLat + 0.010,
+          lng: uLng + 0.008,
+          distance: 1.5,
           normalBeds: 54,
           icuBeds: 14,
           oxygenBeds: 22,
@@ -197,61 +259,24 @@ const Booking = () => {
           isAreaMatch: true
         },
         {
-          id: `h_dyn_2`,
+          id: `h_dyn_gvt2`,
           name: `${primaryTown} District Headquarters Hospital (DH)`,
           area: primaryTown,
-          lat: uLat + 0.018,
-          lng: uLng + 0.012,
-          distance: 2.3,
+          sector: 'GOVT',
+          lat: uLat + 0.022,
+          lng: uLng + 0.015,
+          distance: 2.9,
           normalBeds: 38,
           icuBeds: 9,
           oxygenBeds: 16,
           phone: '08719-254400',
           isAreaMatch: true
-        },
-        {
-          id: `h_dyn_3`,
-          name: `${primaryTown} Lifeline Critical Care & Emergency Hospital`,
-          area: primaryTown,
-          lat: uLat - 0.015,
-          lng: uLng + 0.018,
-          distance: 3.5,
-          normalBeds: 28,
-          icuBeds: 7,
-          oxygenBeds: 12,
-          phone: '08719-253322',
-          isAreaMatch: true
-        },
-        {
-          id: `h_dyn_4`,
-          name: `Sri Krishna Multispecialty & Trauma Care`,
-          area: primaryTown,
-          lat: uLat + 0.025,
-          lng: uLng - 0.014,
-          distance: 4.8,
-          normalBeds: 22,
-          icuBeds: 5,
-          oxygenBeds: 8,
-          phone: '08719-251144',
-          isAreaMatch: true
-        },
-        {
-          id: `h_dyn_5`,
-          name: `Apex Regional Emergency & Trauma Institute`,
-          area: primaryTown,
-          lat: uLat - 0.028,
-          lng: uLng - 0.022,
-          distance: 6.2,
-          normalBeds: 45,
-          icuBeds: 12,
-          oxygenBeds: 20,
-          phone: '108',
-          isAreaMatch: false
         }
       ];
     }
 
     const sorted = pool.sort((a, b) => {
+      // Prioritize private hospitals first if area matches, then proximity
       if (a.isAreaMatch && !b.isAreaMatch) return -1;
       if (!a.isAreaMatch && b.isAreaMatch) return 1;
       return a.distance - b.distance;
@@ -729,12 +754,72 @@ ETA: ${selectedAmbulance ? selectedAmbulance.eta : 5} Minutes`;
             <h3 style={{ fontSize: '18px', color: 'var(--secondary-color)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Hospital size={20} style={{ color: 'var(--accent-teal)' }} /> 3. Select Target Emergency Hospital
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '15px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '12px' }}>
               Hospitals automatically sorted by calculated driving proximity to patient location.
             </p>
 
+            {/* Filter Tabs: All, Private, Govt */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setHospitalTypeFilter('ALL')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  border: hospitalTypeFilter === 'ALL' ? '2px solid var(--accent-teal)' : '1px solid #cbd5e1',
+                  background: hospitalTypeFilter === 'ALL' ? '#f0fdf4' : '#f8fafc',
+                  color: hospitalTypeFilter === 'ALL' ? '#047857' : '#475569'
+                }}
+              >
+                All Hospitals ({hospitalsList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setHospitalTypeFilter('PRIVATE')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  border: hospitalTypeFilter === 'PRIVATE' ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                  background: hospitalTypeFilter === 'PRIVATE' ? '#eff6ff' : '#f8fafc',
+                  color: hospitalTypeFilter === 'PRIVATE' ? '#1d4ed8' : '#475569',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                🏥 Private Hospitals ({hospitalsList.filter(h => h.sector === 'PRIVATE').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setHospitalTypeFilter('GOVT')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  border: hospitalTypeFilter === 'GOVT' ? '2px solid #166534' : '1px solid #cbd5e1',
+                  background: hospitalTypeFilter === 'GOVT' ? '#f0fdf4' : '#f8fafc',
+                  color: hospitalTypeFilter === 'GOVT' ? '#166534' : '#475569',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                🏛️ Govt Hospitals ({hospitalsList.filter(h => h.sector === 'GOVT').length})
+              </button>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {hospitalsList.map((h, idx) => (
+              {hospitalsList
+                .filter(h => hospitalTypeFilter === 'ALL' || h.sector === hospitalTypeFilter)
+                .map((h, idx) => (
                 <div
                   key={h.id}
                   onClick={() => setSelectedHospital(h)}
@@ -753,6 +838,15 @@ ETA: ${selectedAmbulance ? selectedAmbulance.eta : 5} Minutes`;
                   <div style={{ flex: 1, marginRight: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <h4 style={{ fontSize: '15px', color: 'var(--secondary-color)', fontWeight: '700' }}>{h.name}</h4>
+                      {h.sector === 'PRIVATE' ? (
+                        <span style={{ background: '#dbeafe', color: '#1e40af', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '800' }}>
+                          🏥 PRIVATE MULTISPECIALTY
+                        </span>
+                      ) : (
+                        <span style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
+                          🏛️ GOVT HOSPITAL
+                        </span>
+                      )}
                       {h.isAreaMatch ? (
                         <span style={{ background: '#166534', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>
                           📍 LOCAL AREA ({h.area.toUpperCase()})
